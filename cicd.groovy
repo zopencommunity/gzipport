@@ -7,15 +7,6 @@ node('linux')
                         doGenerateSubmoduleConfigurations: false,
                         extensions: [],
                         userRemoteConfigs: [[url: 'https://github.com/ZOSOpenTools/gzipport.git']]])
-                ])
-
-                checkout([
-                        $class: 'GitSCM',
-                        branches: [[name: '*/main']],
-                        doGenerateSubmoduleConfigurations: false,
-                        extensions: [],
-                        userRemoteConfigs: [[url: 'https://github.com/ZOSOpenTools/utils.git']]])
-                ])
         }
 
         stage('Build') {
