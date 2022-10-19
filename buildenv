@@ -6,16 +6,23 @@ export ZOPEN_TYPE="TARBALL"
 
 ZOPEN_TARBALL_DIR=gzip-1.12
 export ZOPEN_TARBALL_URL="https://ftp.gnu.org/gnu/gzip/${ZOPEN_TARBALL_DIR}.tar.xz"
-export ZOPEN_TARBALL_DEPS="curl xz make m4"
+export ZOPEN_TARBALL_DEPS="curl xz make m4 zoslib coreutils"
 
 ZOPEN_GIT_DIR=git
 export ZOPEN_GIT_URL="git://git.savannah.gnu.org/${ZOPEN_GIT_DIR}.git"
 export ZOPEN_GIT_DEPS="git make m4 perl makeinfo autoconf automake"
 
-export ZOPEN_EXTRA_CFLAGS="-std=c11"
-
 zopen_check_results()
 {
-  return 3 # non-functional
+chk="$2_check.log"
+
+failures=$(tail -30 ${chk} | egrep '^# FAIL:|^# ERROR:|^# XFAIL' | awk '{sum+=$3;} END{print sum;}')
+totalTests=$(tail -30 ${chk} | egrep '^# ERROR:|^# PASS:|^# XFAIL:|^# FAIL:|^# XPASS:' | awk '{sum+=$3;} END{print sum;}')
+
+cat <<ZZ
+actualFailures:$failures
+totalTests:$totalTests
+expectedFailures:9
+ZZ
 }
 
