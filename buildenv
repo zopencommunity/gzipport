@@ -1,4 +1,3 @@
-#!/bin/sh
 #
 # Set up environment variables for general build tool to operate
 #
@@ -14,7 +13,7 @@ export ZOPEN_GIT_DEPS="git make m4 perl makeinfo autoconf automake"
 
 zopen_check_results()
 {
-chk="$2_check.log"
+chk="$1/$2_check.log"
 
 failures=$(tail -30 ${chk} | egrep '^# FAIL:|^# ERROR:|^# XFAIL' | awk '{sum+=$3;} END{print sum;}')
 totalTests=$(tail -30 ${chk} | egrep '^# ERROR:|^# PASS:|^# XFAIL:|^# FAIL:|^# XPASS:' | awk '{sum+=$3;} END{print sum;}')
