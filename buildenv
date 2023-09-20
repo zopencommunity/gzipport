@@ -17,8 +17,8 @@ zopen_check_results()
 {
 chk="$1/$2_check.log"
 
-failures=$(tail -30 ${chk} | egrep '^# FAIL:|^# ERROR:|^# XFAIL' | awk '{sum+=$3;} END{print sum;}')
-totalTests=$(tail -30 ${chk} | egrep '^# ERROR:|^# PASS:|^# XFAIL:|^# FAIL:|^# XPASS:' | awk '{sum+=$3;} END{print sum;}')
+failures=$(tail -30 ${chk} | grep -E '^# FAIL:|^# ERROR:|^# XFAIL' | awk '{sum+=$3;} END{print sum;}')
+totalTests=$(tail -30 ${chk} | grep -E '^# ERROR:|^# PASS:|^# XFAIL:|^# FAIL:|^# XPASS:' | awk '{sum+=$3;} END{print sum;}')
 
 cat <<ZZ
 actualFailures:$failures
