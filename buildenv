@@ -1,15 +1,16 @@
 #
 # Set up environment variables for general build tool to operate
 #
-export ZOPEN_TYPE="TARBALL"
+export ZOPEN_BUILD_LINE="STABLE"
 
-ZOPEN_TARBALL_DIR=gzip-1.12
-export ZOPEN_TARBALL_URL="https://ftp.gnu.org/gnu/gzip/${ZOPEN_TARBALL_DIR}.tar.xz"
-export ZOPEN_TARBALL_DEPS="curl xz make m4 zoslib coreutils gawk zoslib"
+ZOPEN_STABLE_DIR=gzip-1.12
+export ZOPEN_STABLE_URL="https://ftp.gnu.org/gnu/gzip/${ZOPEN_STABLE_DIR}.tar.xz"
+export ZOPEN_STABLE_DEPS="curl xz make m4 zoslib coreutils gawk zoslib"
 
 ZOPEN_GIT_DIR=git
-export ZOPEN_GIT_URL="git://git.savannah.gnu.org/${ZOPEN_GIT_DIR}.git"
-export ZOPEN_GIT_DEPS="git make m4 perl texinfo autoconf automake"
+export ZOPEN_DEV_URL="git://git.savannah.gnu.org/${ZOPEN_GIT_DIR}.git"
+export ZOPEN_DEV_DEPS="git make m4 perl texinfo autoconf automake"
+
 export ZOPEN_COMP=CLANG
 
 zopen_check_results()
@@ -26,3 +27,7 @@ expectedFailures:9
 ZZ
 }
 
+zopen_get_version()
+{
+  ./gzip --version | head -1 | awk '{print $2; }'
+}
