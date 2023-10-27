@@ -1,10 +1,8 @@
-#
-# Set up environment variables for general build tool to operate
-#
-export ZOPEN_BUILD_LINE="STABLE"
+# bump: gz-version /GZ_VERSION="(.*)"/ https://ftp.gnu.org/gnu/gzip/|re:/href="gzip-([\d.]+).tar.gz"/$1/|semver:*
+GZ_VERSION="1.12"
 
-ZOPEN_STABLE_DIR=gzip-1.12
-export ZOPEN_STABLE_URL="https://ftp.gnu.org/gnu/gzip/${ZOPEN_STABLE_DIR}.tar.xz"
+export ZOPEN_BUILD_LINE="STABLE"
+export ZOPEN_STABLE_URL="https://ftp.gnu.org/gnu/gzip/gzip-${GZ_VERSION}.tar.xz"
 export ZOPEN_STABLE_DEPS="curl xz make m4 zoslib coreutils gawk zoslib"
 
 ZOPEN_GIT_DIR=git
