@@ -1,5 +1,5 @@
 # bump: gz-version /GZ_VERSION="(.*)"/ https://ftp.gnu.org/gnu/gzip/|re:/href="gzip-([\d.]+).tar.gz"/$1/|semver:*
-GZ_VERSION="1.12"
+GZ_VERSION="1.13"
 
 export ZOPEN_BUILD_LINE="STABLE"
 export ZOPEN_STABLE_URL="https://ftp.gnu.org/gnu/gzip/gzip-${GZ_VERSION}.tar.xz"
