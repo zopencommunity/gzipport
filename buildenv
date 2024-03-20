@@ -21,7 +21,7 @@ totalTests=$(tail -30 ${chk} | grep -E '^# ERROR:|^# PASS:|^# XFAIL:|^# FAIL:|^#
 cat <<ZZ
 actualFailures:$failures
 totalTests:$totalTests
-expectedFailures:9
+expectedFailures:7
 ZZ
 }
 
