@@ -1,0 +1,206 @@
+diff --git a/gzip.c b/gzip.c
+index 6cd8b1b..024115f 100644
+--- a/gzip.c
++++ b/gzip.c
+@@ -225,6 +225,54 @@ unsigned inptr;            /* index of next byte to be processed in inbuf */
+ unsigned outcnt;           /* bytes in output buffer */
+ int rsync = 0;             /* make rsyncable chunks */
+ 
++#ifdef __MVS__
++// Credit to Rocket Software, this is adapted from their source code distribution
++#include "zos.h"
++
++zos_extra_field_t zos_extra_field;
++
++int get_file_attr(int fd) {
++  if( verbose  ) fprintf( stderr, "%s( fd:%d ): ", __FUNCTION__, fd );
++  memset( &zos_extra_field, 0, sizeof(zos_extra_field_t) );
++  memcpy( &zos_extra_field.sign, ZOS_SIGN, 3 );
++
++  struct stat st;
++  if( fstat( fd, &st ) != -1 )
++  {
++      zos_extra_field.ft_ccsid = st.st_tag.ft_ccsid;
++      if( verbose )
++          fprintf( stderr, "ccsid: %d (0x%04X)\n",
++                    zos_extra_field.ft_ccsid, zos_extra_field.ft_ccsid );
++      return 0;
++  }
++
++  int e = errno;
++  memset( &zos_extra_field, 0, sizeof(zos_extra_field_t) );
++  fprintf( stderr, "\n%s: %s(): can't get file attributes for '%s'\n%d - %s\n",
++           program_name, __FUNCTION__, ofname, e, strerror(e) );
++  gzip_error(NULL);
++  return 1;
++}
++
++int restore_file_attr(int fd) {
++  if( verbose ) fprintf( stderr, "%s( fd:%d ): ", __FUNCTION__, fd );
++  if( memcmp( zos_extra_field.sign, ZOS_SIGN, 3 ) != 0 ) {
++      if (verbose) {
++          fprintf( stderr, "\n%s: %s(): extra field block has no signature 'zos'. "
++                            "skip...\n", program_name, __FUNCTION__ );
++          return 0;
++      }
++  }
++
++  if (verbose)
++    fprintf( stderr, "\n%s: %s(): changing ccsid: %d\n",  program_name, __FUNCTION__, zos_extra_field.ft_ccsid  );
++  if (zos_extra_field.ft_ccsid == 0) 
++    __setfdccsid( fd, zos_extra_field.ft_ccsid );
++  else
++    __chgfdccsid( fd, zos_extra_field.ft_ccsid );
++}
++#endif
++
+ static int handled_sig[] =
+   {
+     /* SIGINT must be first, as 'foreground' depends on it.  */
+@@ -770,6 +818,13 @@ treat_stdin ()
+     ifd = STDIN_FILENO;
+     stdin_was_read = true;
+ 
++#ifdef __MVS__
++    __disableautocvt(ifd);
++    if (!decompress)
++      get_file_attr(ifd);
++    __disableautocvt(STDOUT_FILENO);
++#endif
++
+     if (decompress) {
+         method = get_method(ifd);
+         if (method < 0) {
+@@ -952,6 +1007,12 @@ treat_file (char *iname)
+     clear_bufs(); /* clear input and output buffers */
+     part_nb = 0;
+ 
++#ifdef __MVS__
++    if (!decompress)
++      get_file_attr(ifd);
++    __disableautocvt(ifd);
++#endif
++
+     if (decompress) {
+         method = get_method(ifd); /* updates ofname if original given */
+         if (method < 0) {
+@@ -975,6 +1036,17 @@ treat_file (char *iname)
+                     program_name, ifname, ofname);
+         }
+     }
++
++#ifdef __MVS__
++     __disableautocvt(ofd);
++    if (!decompress) {
++      if(!to_stdout) 
++        __setfdbinary(ofd);
++    } else if (!to_stdout) {
++      restore_file_attr(ofd);  
++    }
++#endif
++
+     /* Keep the name even if not truncated except with --no-name: */
+     if (!save_orig_name) save_orig_name = !no_name;
+ 
+@@ -1586,6 +1658,17 @@ get_method (int in)
+             uch lenbuf[2];
+             unsigned int len = lenbuf[0] = get_byte ();
+             len |= (lenbuf[1] = get_byte ()) << 8;
++#ifdef __MVS__
++            uch *p = (uch*)&zos_extra_field;
++            if( verbose  ) fprintf( stderr, "In zos_get_extra_field()");
++            for( int i = 0; i < len && i < sizeof(zos_extra_field_t); i++ )
++            {
++                *p = get_byte();
++                p++;
++            }
++            if (flags & HEADER_CRC)
++              updcrc ((uch*)&zos_extra_field, sizeof(zos_extra_field_t));
++#else
+             if (verbose) {
+                 fprintf(stderr,"%s: %s: extra field of %u bytes ignored\n",
+                         program_name, ifname, len);
+@@ -1593,6 +1676,7 @@ get_method (int in)
+             if (flags & HEADER_CRC)
+               updcrc (lenbuf, 2);
+             discard_input_bytes (len, flags);
++#endif
+         }
+ 
+         /* Get original file name if it was truncated */
+diff --git a/zip.c b/zip.c
+index 42ac886..f806730 100644
+--- a/zip.c
++++ b/zip.c
+@@ -22,6 +22,9 @@
+ 
+ #include "tailor.h"
+ #include "gzip.h"
++#ifdef __MVS__
++#include "zos.h"
++#endif
+ 
+ off_t header_bytes;   /* number of bytes in gzip header */
+ 
+@@ -56,6 +59,13 @@ zip (int in, int out)
+     if (save_orig_name) {
+         flags |= ORIG_NAME;
+     }
++
++#ifdef __MVS__
++    zos_extra_field_t *zz = zos_get_extra_field();
++    if( memcmp( zz->sign, ZOS_SIGN, 3 ) == 0 )
++        flags |= EXTRA_FIELD; // data for restore a file tag in zos
++#endif
++
+     put_byte(flags);         /* general flags */
+     if (time_stamp.tv_nsec < 0)
+       stamp = 0;
+@@ -83,6 +93,17 @@ zip (int in, int out)
+     put_byte((uch)deflate_flags); /* extra flags */
+     put_byte(OS_CODE);            /* OS identifier */
+ 
++#ifdef __MVS__
++    if( (flags & EXTRA_FIELD) != 0 )
++    {
++        ush len = sizeof( zos_extra_field_t );
++        put_short( len );
++        uch *p = (uch*)zz;
++        for( int i = 0; i < len; i++ )
++            put_byte( p[i] );
++    }
++#endif
++
+     if (save_orig_name) {
+         char *p = gzip_base_name (ifname); /* Don't save the directory part. */
+         do {
+diff --git a/zos.h b/zos.h
+new file mode 100644
+index 0000000..84c7b5b
+--- /dev/null
++++ b/zos.h
+@@ -0,0 +1,24 @@
++#ifndef __ZOS_H_
++#define __ZOS_H_
++#define ZOS_SIGN "\x7A\x6F\x73" // "zos"
++
++//----------------------------------------------------------
++// the place to remember info about tagging of unpacked file
++//
++typedef struct
++{
++    unsigned char   sign[4];
++    unsigned short  ft_ccsid;
++    unsigned short  reserv;
++
++} zos_extra_field_t;
++
++extern zos_extra_field_t zos_extra_field;
++//----------------------------------------------------------
++// return pointer to block with stored info
++//
++zos_extra_field_t *zos_get_extra_field()
++{
++    return &zos_extra_field;
++}
++#endif
