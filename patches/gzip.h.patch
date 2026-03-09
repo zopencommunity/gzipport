@@ -1,5 +1,5 @@
 diff --git a/gzip.h b/gzip.h
-index 855a88b..9b00fa8 100644
+index 855a88b..2c08afc 100644
 --- a/gzip.h
 +++ b/gzip.h
 @@ -192,6 +192,9 @@ extern int level;          /* compression level */
@@ -12,11 +12,13 @@ index 855a88b..9b00fa8 100644
  
  #define get_byte()  (inptr < insize ? inbuf[inptr++] : fill_inbuf(0))
  #define try_byte()  (inptr < insize ? inbuf[inptr++] : fill_inbuf(1))
-@@ -330,3 +333,7 @@ extern int gzip_inflate (void);
+@@ -330,3 +333,9 @@ extern int gzip_inflate (void);
  extern int dfltcc_deflate (int pack_level);
  extern int dfltcc_inflate (void);
  #endif
 +
 +#ifdef __MVS__
 +extern int is_zedc_enabled (int decompress);
++extern int zedc_deflate (int pack_level);
++extern int zedc_inflate (void);
 +#endif

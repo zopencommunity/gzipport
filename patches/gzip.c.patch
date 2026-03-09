@@ -1,8 +1,20 @@
 diff --git a/gzip.c b/gzip.c
-index 913fafe..419ac73 100644
+index 913fafe..95250f4 100644
 --- a/gzip.c
 +++ b/gzip.c
-@@ -185,7 +185,9 @@ static int part_nb;          /* number of parts in .gz file */
+@@ -97,6 +97,11 @@ static char const *const license_msg[] = {
+ #  include <utimens.h>
+ #endif
+ 
++#ifdef __MVS__
++# include "zos_extra.h"
++# include <zos.h>
++#endif
++
+ #ifndef MAX_PATH_LEN
+ #  define MAX_PATH_LEN   1024 /* max pathname length */
+ #endif
+@@ -185,7 +190,9 @@ static int part_nb;          /* number of parts in .gz file */
  static char *env;            /* contents of GZIP env variable */
  static char const *z_suffix; /* default suffix (can be set with --suffix) */
  static size_t z_len;         /* strlen(z_suffix) */
@@ -13,13 +25,12 @@ index 913fafe..419ac73 100644
  /* The original timestamp (modification time).  If the original is
     unknown, TIME_STAMP.tv_nsec is negative.  If the original is
     greater than struct timespec range, TIME_STAMP is the maximal
-@@ -220,6 +222,54 @@ unsigned inptr;            /* index of next byte to be processed in inbuf */
+@@ -220,6 +227,53 @@ unsigned inptr;            /* index of next byte to be processed in inbuf */
  unsigned outcnt;           /* bytes in output buffer */
  int rsync = 0;             /* make rsyncable chunks */
  
 +#ifdef __MVS__
 +// Credit to Rocket Software, this is adapted from their source code distribution
-+#include "zos.h"
 +
 +zos_extra_field_t zos_extra_field;
 +
@@ -68,7 +79,7 @@ index 913fafe..419ac73 100644
  static int handled_sig[] =
    {
      /* SIGINT must be first, as 'foreground' depends on it.  */
-@@ -249,6 +299,9 @@ enum
+@@ -249,6 +303,9 @@ enum
    PRESUME_INPUT_TTY_OPTION = CHAR_MAX + 1,
    RSYNCABLE_OPTION,
    SYNCHRONOUS_OPTION,
@@ -78,7 +89,7 @@ index 913fafe..419ac73 100644
  };
  
  static char const shortopts[] = "ab:cdfhH?klLmMnNqrS:tvVZ123456789";
-@@ -284,6 +337,9 @@ static const struct option longopts[] =
+@@ -284,6 +341,9 @@ static const struct option longopts[] =
      {"lzw",        0, 0, 'Z'}, /* make output compatible with old compress */
      {"bits",       1, 0, 'b'}, /* max number of bits per code (implies -Z) */
      {"rsyncable",  0, 0, RSYNCABLE_OPTION}, /* make rsync-friendly archive */
@@ -88,7 +99,7 @@ index 913fafe..419ac73 100644
      { 0, 0, 0, 0 }
  };
  
-@@ -365,6 +421,9 @@ help ()
+@@ -365,6 +425,9 @@ help ()
   "  -t, --test        test compressed file integrity",
   "  -v, --verbose     verbose mode",
   "  -V, --version     display version number",
@@ -98,7 +109,7 @@ index 913fafe..419ac73 100644
   "  -1, --fast        compress faster",
   "  -9, --best        compress better",
   "",
-@@ -383,7 +442,6 @@ static void
+@@ -383,7 +446,6 @@ static void
  license ()
  {
      char const *const *p = license_msg;
@@ -106,7 +117,7 @@ index 913fafe..419ac73 100644
      printf ("%s %s\n", program_name, Version);
      while (*p) printf ("%s\n", *p++);
  }
-@@ -567,7 +625,11 @@ int main (int argc, char **argv)
+@@ -567,7 +629,11 @@ int main (int argc, char **argv)
          case '5':  case '6':  case '7':  case '8':  case '9':
              level = optc - '0';
              break;
@@ -119,7 +130,7 @@ index 913fafe..419ac73 100644
          default:
              try_help ();
          }
-@@ -733,6 +795,13 @@ treat_stdin ()
+@@ -733,6 +799,13 @@ treat_stdin ()
      ifd = STDIN_FILENO;
      stdin_was_read = true;
  
@@ -133,7 +144,7 @@ index 913fafe..419ac73 100644
      if (decompress) {
          method = get_method(ifd);
          if (method < 0) {
-@@ -914,6 +983,12 @@ treat_file (char *iname)
+@@ -914,6 +987,12 @@ treat_file (char *iname)
      clear_bufs(); /* clear input and output buffers */
      part_nb = 0;
  
@@ -146,7 +157,7 @@ index 913fafe..419ac73 100644
      if (decompress) {
          method = get_method(ifd); /* updates ofname if original given */
          if (method < 0) {
-@@ -937,6 +1012,17 @@ treat_file (char *iname)
+@@ -937,6 +1016,17 @@ treat_file (char *iname)
                      program_name, ifname, ofname);
          }
      }
@@ -164,7 +175,7 @@ index 913fafe..419ac73 100644
      /* Keep the name even if not truncated except with --no-name: */
      if (!save_orig_name) save_orig_name = !no_name;
  
-@@ -1547,6 +1633,17 @@ get_method (int in)
+@@ -1547,6 +1637,17 @@ get_method (int in)
              uch lenbuf[2];
              unsigned int len = lenbuf[0] = get_byte ();
              len |= (lenbuf[1] = get_byte ()) << 8;
@@ -182,7 +193,7 @@ index 913fafe..419ac73 100644
              if (verbose) {
                  fprintf(stderr,"%s: %s: extra field of %u bytes ignored\n",
                          program_name, ifname, len);
-@@ -1554,6 +1651,7 @@ get_method (int in)
+@@ -1554,6 +1655,7 @@ get_method (int in)
              if (flags & HEADER_CRC)
                updcrc (lenbuf, 2);
              discard_input_bytes (len, flags);

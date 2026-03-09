@@ -1,11 +1,11 @@
-diff --git a/zos.h b/zos.h
+diff --git a/zos_extra.h b/zos_extra.h
 new file mode 100644
-index 0000000..84c7b5b
+index 0000000..e1daffb
 --- /dev/null
-+++ b/zos.h
++++ b/zos_extra.h
 @@ -0,0 +1,24 @@
-+#ifndef __ZOS_H_
-+#define __ZOS_H_
++#ifndef __ZOS_EXTRA_H_
++#define __ZOS_EXTRA_H_
 +#define ZOS_SIGN "\x7A\x6F\x73" // "zos"
 +
 +//----------------------------------------------------------
@@ -23,7 +23,7 @@ index 0000000..84c7b5b
 +//----------------------------------------------------------
 +// return pointer to block with stored info
 +//
-+zos_extra_field_t *zos_get_extra_field()
++static inline zos_extra_field_t *zos_get_extra_field()
 +{
 +    return &zos_extra_field;
 +}

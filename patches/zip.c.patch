@@ -1,18 +1,19 @@
 diff --git a/zip.c b/zip.c
-index eb42982..d1eee0d 100644
+index eb42982..4487a81 100644
 --- a/zip.c
 +++ b/zip.c
-@@ -21,6 +21,9 @@
+@@ -21,6 +21,10 @@
  
  #include "tailor.h"
  #include "gzip.h"
 +#ifdef __MVS__
-+#include "zos.h"
++#include "zos_extra.h"
++#include <zos.h>
 +#endif
  
  off_t header_bytes;   /* number of bytes in gzip header */
  
-@@ -55,6 +58,13 @@ zip (int in, int out)
+@@ -55,6 +59,13 @@ zip (int in, int out)
      if (save_orig_name) {
          flags |= ORIG_NAME;
      }
@@ -26,7 +27,7 @@ index eb42982..d1eee0d 100644
      put_byte(flags);         /* general flags */
      if (time_stamp.tv_nsec < 0)
        stamp = 0;
-@@ -71,17 +81,34 @@ zip (int in, int out)
+@@ -71,17 +82,34 @@ zip (int in, int out)
  
      /* Write deflated file to zip file */
      updcrc (NULL, 0);
@@ -62,7 +63,7 @@ index eb42982..d1eee0d 100644
      if (save_orig_name) {
          char *p = gzip_base_name (ifname); /* Don't save the directory part. */
          do {
-@@ -93,6 +120,14 @@ zip (int in, int out)
+@@ -93,6 +121,14 @@ zip (int in, int out)
  #ifdef IBM_Z_DFLTCC
      dfltcc_deflate (level);
  #else
