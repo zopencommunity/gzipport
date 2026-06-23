@@ -1,3 +1,5 @@
+[![CodeQL](https://github.com/zopencommunity/gzipport/actions/workflows/codeql.yml/badge.svg)](https://github.com/zopencommunity/gzipport/actions/workflows/codeql.yml)
+
 [![Automatic version updates](https://github.com/ZOSOpenTools/gzipport/actions/workflows/bump.yml/badge.svg)](https://github.com/ZOSOpenTools/gzipport/actions/workflows/bump.yml)
 
 # Gzip
